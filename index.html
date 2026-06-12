@@ -15,6 +15,7 @@
             --accent-green-hover: #059669;
             --accent-blue: #3b82f6;
             --border-color: #374151;
+            --global-saturation: 100%;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -29,9 +30,12 @@
         .panel { background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
         .panel-title { font-size: 16px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; justify-content: space-between; }
         
-        .toolbar { display: flex; align-items: center; background-color: var(--bg-tertiary); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .toolbar { display: flex; flex-direction: column; gap: 12px; background-color: var(--bg-tertiary); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); }
         .toggle-container { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; font-weight: 500; }
         
+        .saturation-control { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text-main); border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 4px; }
+        .saturation-control input[type="range"] { flex: 1; accent-color: var(--accent-blue); cursor: pointer; }
+
         .custom-deck { 
             background-color: var(--bg-tertiary); 
             border: 1px solid var(--border-color); 
@@ -58,7 +62,7 @@
         .output-container { position: relative; flex: 1; width: 100%; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; overflow: auto; }
         
         pre { font-family: monospace; font-size: 14px; line-height: 1.6; white-space: pre-wrap; color: #ffffff; }
-        .hl-node { padding: 2px 6px; border-radius: 4px; display: inline-block; font-weight: inherit; font-style: inherit; }
+        .hl-node { padding: 2px 6px; border-radius: 4px; display: inline-block; font-weight: inherit; font-style: inherit; filter: saturate(var(--global-saturation)); }
 
         .btn-group { display: flex; gap: 10px; }
         button { background-color: var(--bg-tertiary); color: white; border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease; }
@@ -74,7 +78,7 @@
 
     <header>
         <h1>🌿 StrataTree Studio Pro</h1>
-        <div class="subtitle">An adaptive standalone hierarchy builder with smart auto-indentation routing.</div>
+        <div class="subtitle">An adaptive standalone hierarchy builder with soft pastel mechanics.</div>
     </header>
 
     <main class="main-layout">
@@ -92,11 +96,17 @@
                     </span>
                     <span>Enable Strata Customizer</span>
                 </label>
+                
+                <div class="saturation-control" id="saturationWrapper" style="display: none;">
+                    <span>Global Color Saturation:</span>
+                    <input type="range" id="globalSaturationSlider" min="0" max="200" value="100" oninput="handleSaturationChange(this.value)">
+                    <span id="saturationVal">100%</span>
+                </div>
             </div>
 
             <div class="custom-deck" id="customDeck"></div>
 
-            <textarea id="treeInput" placeholder="Type or paste your tree nodes here. Indentations track automatically on Enter..."></textarea>
+            <textarea id="treeInput" placeholder="Type or paste your tree nodes here..."></textarea>
         </section>
 
         <section class="panel">
@@ -122,17 +132,20 @@
         const DIRECTORY_MARKER = '│   ';
         const EMPTY_MARKER = '    ';
 
+        // Palette initialized to clean resets and pale/pastel tones unanimously
         let layerStylesCache = {
-            0: { emoji: '👑', case: 'none', style: 'none', color: '#f59e0b' },
-            1: { emoji: '📁', case: 'none', style: 'bold', color: '#10b981' },
-            2: { emoji: '📄', case: 'lower', style: 'none', color: '#3b82f6' }
+            0: { emoji: '👑', case: 'none', style: 'none', color: '#ffb3ba' }, // Soft Pastel Pink
+            1: { emoji: '📁', case: 'none', style: 'none', color: '#baffc9' }, // Soft Pastel Green
+            2: { emoji: '📄', case: 'none', style: 'none', color: '#bae1ff' }  // Soft Pastel Blue
         };
 
         const fallbackDefaultStyles = [
-            { emoji: '🔹', case: 'none', style: 'none', color: '#a855f7' },
-            { emoji: '🔸', case: 'none', style: 'none', color: '#ec4899' },
-            { emoji: '▪️', case: 'none', style: 'none', color: '#6b7280' }
+            { emoji: '🔹', case: 'none', style: 'none', color: '#ffffba' }, // Soft Pastel Yellow
+            { emoji: '🔸', case: 'none', style: 'none', color: '#e8c4ff' }, // Soft Pastel Purple
+            { emoji: '▪️', case: 'none', style: 'none', color: '#ffdfba' }  // Soft Pastel Orange
         ];
+
+        let currentGlobalSaturation = 100;
 
         function parseTextToStructure(text) {
             const rawLines = text.split(/\r?\n/);
@@ -220,6 +233,14 @@
         function handleToggleView() {
             const isStrataEnabled = document.getElementById('strataToggle').checked;
             document.getElementById('customDeck').style.display = isStrataEnabled ? 'flex' : 'none';
+            document.getElementById('saturationWrapper').style.display = isStrataEnabled ? 'flex' : 'none';
+            renderTree();
+        }
+
+        function handleSaturationChange(val) {
+            currentGlobalSaturation = val;
+            document.getElementById('saturationVal').innerText = val + '%';
+            document.documentElement.style.setProperty('--global-saturation', val + '%');
             renderTree();
         }
 
@@ -291,7 +312,7 @@
         }
 
         function updateUrlHash(text, toggleState) {
-            const config = { t: text, s: toggleState ? 1 : 0, cache: layerStylesCache };
+            const config = { t: text, s: toggleState ? 1 : 0, cache: layerStylesCache, sat: currentGlobalSaturation };
             const encodedState = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
             window.history.replaceState(null, null, "#" + encodedState);
         }
@@ -334,15 +355,14 @@
 
         function loadSampleData() {
             document.getElementById('treeInput').value = "ui-project\n  components\n    Button.tsx\n    Card.tsx\n  assets\n    sub-assets\n      nested-file.png\n  index.ts";
-            document.getElementById('strataToggle').checked = true;
-            handleToggleView();
+            renderTree();
         }
 
         window.addEventListener('DOMContentLoaded', () => {
             const cfg = decodeUrlHash();
             const inputArea = document.getElementById('treeInput');
 
-            // ⚡ KEY FIX: Advanced Keystroke Trapping for Code Editing
+            // ⚡ Keystroke Trapping for Code Editing
             inputArea.addEventListener('keydown', function(e) {
                 const start = this.selectionStart;
                 const end = this.selectionEnd;
@@ -356,29 +376,29 @@
                     renderTree();
                 }
 
+                // Smart Multi-space Backspace Handler
+                if (e.key === 'Backspace' && start === end) {
+                    // Check if the preceding text matches a full 2-space tab indent
+                    if (val.substring(start - 2, start) === "  ") {
+                        e.preventDefault();
+                        this.value = val.substring(0, start - 2) + val.substring(end);
+                        this.selectionStart = this.selectionEnd = start - 2;
+                        renderTree();
+                    }
+                }
+
                 // Enter Key (Auto-Indentation) Handler
                 if (e.key === 'Enter') {
-                    e.preventDefault(); // Intercept default hard line split
-
-                    // Find where the current line starts by looking backward for the nearest line break
+                    e.preventDefault();
                     const lastNewLineIndex = val.lastIndexOf('\n', start - 1);
                     const currentLineStart = lastNewLineIndex + 1;
-                    
-                    // Slice the active line text up to where your cursor is positioned
                     const currentLineText = val.substring(currentLineStart, start);
-                    
-                    // Match any leading whitespace (spaces or tabs) on the active line
                     const leadingWhitespaceMatch = currentLineText.match(/^[\s]*/);
                     const whitespaceToPreserve = leadingWhitespaceMatch ? leadingWhitespaceMatch[0] : '';
-
-                    // Construct the new structural payload: break + matching spacing
                     const dynamicSpacer = "\n" + whitespaceToPreserve;
                     
                     this.value = val.substring(0, start) + dynamicSpacer + val.substring(end);
-                    
-                    // Target your blinking cursor exactly right after the alignment spaces
                     this.selectionStart = this.selectionEnd = start + dynamicSpacer.length;
-                    
                     renderTree();
                 }
             });
@@ -387,8 +407,16 @@
                 document.getElementById('treeInput').value = cfg.t || '';
                 document.getElementById('strataToggle').checked = cfg.s === 1;
                 if (cfg.cache) layerStylesCache = cfg.cache;
+                if (cfg.sat !== undefined) {
+                    currentGlobalSaturation = cfg.sat;
+                    document.getElementById('globalSaturationSlider').value = cfg.sat;
+                    document.getElementById('saturationVal').innerText = cfg.sat + '%';
+                    document.documentElement.style.setProperty('--global-saturation', cfg.sat + '%');
+                }
                 handleToggleView();
             } else {
+                // Keep the toggle off explicitly on fresh load so emojis/colors stay hidden by default
+                document.getElementById('strataToggle').checked = false;
                 loadSampleData();
             }
             inputArea.addEventListener('input', renderTree);

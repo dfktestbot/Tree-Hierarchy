@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StrataTree Studio - Independent Hierarchy Generator</title>
+    <style>
+        :root {
+            --bg-primary: #121824;
+            --bg-secondary: #1a2333;
+            --bg-tertiary: #243147;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --accent-green: #10b981;
+            --accent-green-hover: #059669;
+            --accent-blue: #3b82f6;
+            --border-color: #374151;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+        }
+
+        header {
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            flex: 1;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            background-color: var(--bg-tertiary);
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 22px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #4b5563;
+            transition: .2s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .2s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-green);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(18px);
+        }
+
+        textarea {
+            width: 100%;
+            flex: 1;
+            min-height: 350px;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+            color: #ffffff;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .output-container {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 14px;
+            overflow: auto;
+        }
+
+        pre {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            color: #ffffff;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background-color: var(--bg-tertiary);
+            color: white;
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+        }
+
+        button:hover {
+            background-color: #2e3f5c;
+            border-color: var(--text-muted);
+        }
+
+        button.btn-primary {
+            background-color: var(--accent-green);
+            border-color: transparent;
+        }
+
+        button.btn-primary:hover {
+            background-color: var(--accent-green-hover);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background-color: var(--accent-blue);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-size: 14px;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.2s ease;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🌿 StrataTree Studio</h1>
+        <div class="subtitle">An independent standalone tool for generating and sharing multi-level tree diagrams.</div>
+    </header>
+
+    <main class="main-layout">
+        <!-- LEFT PANEL: USER INPUT & CONFIGURATION -->
+        <section class="panel">
+            <div class="panel-title">
+                <span>Input Hierarchy Layout</span>
+                <button onclick="loadSampleData()">Load Sample</button>
+            </div>
+            
+            <div class="toolbar">
+                <label class="toggle-container">
+                    <span class="switch">
+                        <input type="checkbox" id="strataToggle" onchange="renderTree()">
+                        <span class="slider"></span>
+                    </span>
+                    <span>Unified Strata Styling</span>
+                </label>
+            </div>
+
+            <textarea id="treeInput" placeholder="Type or paste your tree nodes here. Indent using spaces or tabs..."></textarea>
+        </section>
+
+        <!-- RIGHT PANEL: INTERACTIVE GRAPHIC RENDERING -->
+        <section class="panel">
+            <div class="panel-title">
+                <span>ASCII Output Visualizer</span>
+                <div class="btn-group">
+                    <button onclick="shareState()" class="btn-primary">🔗 Share Layout Link</button>
+                    <button onclick="copyToClipboard()">📋 Copy Tree Diagram</button>
+                </div>
+            </div>
+
+            <div class="output-container">
+                <pre id="treeOutput">.</pre>
+            </div>
+        </section>
+    </main>
+
+    <div id="toastNotification" class="toast">Link copied to clipboard!</div>
+
+    <script>
+        // Configuration mapping for multi-strata transformations
+        const strataFormats = {
+            0: (name) => `👑 ${name.toUpperCase()}`,
+            1: (name) => `📁 **${name}**`,
+            2: (name) => `📄 *${name.toLowerCase()}*`
+        };
+
+        const CHILD_MARKER = '├── ';
+        const LAST_CHILD_MARKER = '└── ';
+        const DIRECTORY_MARKER = '│   ';
+        const EMPTY_MARKER = '    ';
+
+        // Core dynamic text node structure parser logic
+        function parseTextToStructure(text) {
+            const rawLines = text.split(/\r?\n/);
+            const items = [];
+
+            for (let line of rawLines) {
+                if (/^\s*$/.test(line)) continue; // ignore empty rows
+
+                const leadingWhitespace = line.match(/^\s*/)[0];
+                const cleanName = line.trim().replace(/^-\s+/, '');
+                
+                // Using spaces length as an index relative proxy for structural hierarchy depth
+                items.push({
+                    name: cleanName,
+                    indent: leadingWhitespace.length,
+                    children: [],
+                    parent: null
+                });
+            }
+
+            // Establish full tree node object relationships
+            const root = { name: '.', indent: -1, children: [], parent: null };
+            const pathStack = [root];
+
+            for (let item of items) {
+                while (pathStack[pathStack.length - 1].indent >= item.indent) {
+                    pathStack.pop();
+                }
+                const currentParent = pathStack[pathStack.length - 1];
+                currentParent.children.push(item);
+                item.parent = currentParent;
+                pathStack.push(item);
+            }
+
+            return root;
+        }
+
+        // Draw structural lines recursively
+        function generateTreeDiagram(node, isStrataEnabled, prefixes = []) {
+            if (!node.parent) {
+                // Root node baseline render
+                let rootOutput = isStrataEnabled && strataFormats[0] ? strataFormats[0](node.name) : node.name;
+                let results = [rootOutput];
+                
+                for (let i = 0; i < node.children.length; i++) {
+                    results = results.concat(generateTreeDiagram(node.children[i], isStrataEnabled, [i === node.children.length - 1]));
+                }
+                return results;
+            }
+
+            // Compute true structural layer depth by tracing nodes up to original root parent
+            let strataDepth = 0;
+            let tracer = node.parent;
+            while(tracer.parent) {
+                strataDepth++;
+                tracer = tracer.parent;
+            }
+
+            // Assemble matching structural branches prefixing characters
+            let linePrefix = '';
+            for (let i = 0; i < prefixes.length - 1; i++) {
+                linePrefix += prefixes[i] ? EMPTY_MARKER : DIRECTORY_MARKER;
+            }
+            linePrefix += prefixes[prefixes.length - 1] ? LAST_CHILD_MARKER : CHILD_MARKER;
+
+            // Run formatting transformer logic if unified flag is turned on
+            let nodeName = node.name;
+            if (isStrataEnabled && strataFormats[strataDepth]) {
+                nodeName = strataFormats[strataDepth](nodeName);
+            }
+
+            let outputLines = [linePrefix + nodeName];
+
+            for (let i = 0; i < node.children.length; i++) {
+                const nextPrefixes = [...prefixes.slice(0, -1), prefixes[prefixes.length - 1], i === node.children.length - 1];
+                outputLines = outputLines.concat(generateTreeDiagram(node.children[i], isStrataEnabled, nextPrefixes));
+            }
+
+            return outputLines;
+        }
+
+        function renderTree() {
+            const inputData = document.getElementById('treeInput').value;
+            const isStrataEnabled = document.getElementById('strataToggle').checked;
+            
+            if (!inputData.trim()) {
+                document.getElementById('treeOutput').innerText = '.';
+                return;
+            }
+
+            try {
+                const structuralTree = parseTextToStructure(inputData);
+                const diagramLines = generateTreeDiagram(structuralTree, isStrataEnabled);
+                document.getElementById('treeOutput').innerText = diagramLines.join('\n');
+                
+                // Automatically save transient state directly to location hash dynamically without reload 
+                updateUrlHash(inputData, isStrataEnabled);
+            } catch (err) {
+                document.getElementById('treeOutput').innerText = "Parsing matching layout parameters error: " + err.message;
+            }
+        }
+
+        // State compression and expansion tracking algorithms using base64 encryption layer
+        function updateUrlHash(text, toggleState) {
+            const stateObject = { t: text, s: toggleState ? 1 : 0 };
+            const jsonString = JSON.stringify(stateObject);
+            const encodedState = btoa(unescape(encodeURIComponent(jsonString)));
+            window.history.replaceState(null, null, "#" + encodedState);
+        }
+
+        function decodeUrlHash() {
+            try {
+                const hash = window.location.hash.substring(1);
+                if (!hash) return null;
+                const decodedJson = decodeURIComponent(escape(atob(hash)));
+                return JSON.parse(decodedJson);
+            } catch(e) {
+                console.error("Invalid base64 payload decoding parameters:", e);
+                return null;
+            }
+        }
+
+        function shareState() {
+            renderTree(); // Ensure url hash is current
+            const shareUrl = window.location.href;
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                showToast("Shareable configuration link copied!");
+            });
+        }
+
+        function copyToClipboard() {
+            const outputText = document.getElementById('treeOutput').innerText;
+            navigator.clipboard.writeText(outputText).then(() => {
+                showToast("ASCII diagram template copied!");
+            });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 2000);
+        }
+
+        function loadSampleData() {
+            document.getElementById('treeInput').value = "my-project\n  src\n    index.html\n    main.js\n    styles.css\n  dist\n    index.html\n    bundle.js\n  package.json\n  README.md";
+            document.getElementById('strataToggle').checked = true;
+            renderTree();
+        }
+
+        // Self initialization logic loop when page mounts on browser
+        window.addEventListener('DOMContentLoaded', () => {
+            const sharedState = decodeUrlHash();
+            if (sharedState) {
+                document.getElementById('treeInput').value = sharedState.t || '';
+                document.getElementById('strataToggle').checked = sharedState.s === 1;
+                renderTree();
+            } else {
+                loadSampleData();
+            }
+
+            // Enable live real-time editing refresh
+            document.getElementById('treeInput').addEventListener('input', renderTree);
+        });
+    </script>
+</body>
+</html>

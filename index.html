@@ -32,13 +32,12 @@
         .toolbar { display: flex; align-items: center; background-color: var(--bg-tertiary); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border-color); }
         .toggle-container { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; font-weight: 500; }
         
-        /* Customization UI Deck Configuration */
         .custom-deck { 
             background-color: var(--bg-tertiary); 
             border: 1px solid var(--border-color); 
             border-radius: 8px; 
             padding: 16px; 
-            display: none; /* Hidden by default, controlled via JavaScript */
+            display: none; 
             flex-direction: column; 
             gap: 14px; 
         }
@@ -75,7 +74,7 @@
 
     <header>
         <h1>🌿 StrataTree Studio Pro</h1>
-        <div class="subtitle">An adaptive standalone hierarchy builder with dynamic custom layout option scaling.</div>
+        <div class="subtitle">An adaptive standalone hierarchy builder with smooth code-editor tab indents.</div>
     </header>
 
     <main class="main-layout">
@@ -97,7 +96,7 @@
 
             <div class="custom-deck" id="customDeck"></div>
 
-            <textarea id="treeInput" placeholder="Type or paste your tree nodes here. Indent using spaces..."></textarea>
+            <textarea id="treeInput" placeholder="Type or paste your tree nodes here. Use Tab to indent layers..."></textarea>
         </section>
 
         <section class="panel">
@@ -123,14 +122,12 @@
         const DIRECTORY_MARKER = '│   ';
         const EMPTY_MARKER = '    ';
 
-        // Local configuration cache to retain choices even when rows hide/appear dynamically
         let layerStylesCache = {
             0: { emoji: '👑', case: 'none', style: 'none', color: '#f59e0b' },
             1: { emoji: '📁', case: 'none', style: 'bold', color: '#10b981' },
             2: { emoji: '📄', case: 'lower', style: 'none', color: '#3b82f6' }
         };
 
-        // Fallback default assignments for high-depth layers discovered on the fly
         const fallbackDefaultStyles = [
             { emoji: '🔹', case: 'none', style: 'none', color: '#a855f7' },
             { emoji: '🔸', case: 'none', style: 'none', color: '#ec4899' },
@@ -142,9 +139,11 @@
             const items = [];
             for (let line of rawLines) {
                 if (/^\s*$/.test(line)) continue;
-                const leadingWhitespace = line.match(/^\s*/)[0];
+                // Treat literal tab characters (\t) as 2 spaces for calculation reliability
+                const normalizedLine = line.replace(/\t/g, '  ');
+                const leadingWhitespace = normalizedLine.match(/^\s*/)[0];
                 items.push({
-                    name: line.trim().replace(/^-\s+/, ''),
+                    name: normalizedLine.trim().replace(/^-\s+/, ''),
                     indent: leadingWhitespace.length,
                     children: []
                 });
@@ -159,7 +158,6 @@
             return root;
         }
 
-        // Analyzes the current indentation stack to find the deepest layer present
         function determineMaxDepth(node, currentDepth = 0) {
             let max = currentDepth;
             for (let child of node.children) {
@@ -169,11 +167,8 @@
             return max;
         }
 
-        // Rebuilds UI configuration controls to match required layer depths exactly
         function syncCustomizationDeck(maxDepth) {
             const deck = document.getElementById('customDeck');
-            
-            // Generate standard structural table headers
             let html = `
                 <div class="deck-row deck-header">
                     <span>Layer</span>
@@ -185,12 +180,10 @@
             `;
 
             for (let i = 0; i <= maxDepth; i++) {
-                // Seed row cache configuration if a completely new level is introduced
                 if (!layerStylesCache[i]) {
                     const fallback = fallbackDefaultStyles[(i - 3) % fallbackDefaultStyles.length] || fallbackDefaultStyles[0];
                     layerStylesCache[i] = { ...fallback };
                 }
-
                 const c = layerStylesCache[i];
                 const label = i === 0 ? "Root (L0)" : i === 1 ? "Folder (L1)" : i === 2 ? "File (L2)" : `Level ${i}`;
 
@@ -212,11 +205,9 @@
                     </div>
                 `;
             }
-
             deck.innerHTML = html;
         }
 
-        // Saves current state back to memory cache before rendering cycles clear inputs
         function updateCache(layer) {
             if (!document.getElementById(`emoji${layer}`)) return;
             layerStylesCache[layer] = {
@@ -227,7 +218,6 @@
             };
         }
 
-        // Controls control card display parameters based on main toggle switch
         function handleToggleView() {
             const isStrataEnabled = document.getElementById('strataToggle').checked;
             document.getElementById('customDeck').style.display = isStrataEnabled ? 'flex' : 'none';
@@ -236,7 +226,6 @@
 
         function applyLayerStyles(name, depth, isStrataEnabled, mode) {
             if (!isStrataEnabled || !layerStylesCache[depth]) return name;
-            
             const c = layerStylesCache[depth];
             let transformedName = name;
             if (c.case === 'upper') transformedName = transformedName.toUpperCase();
@@ -257,7 +246,6 @@
 
         function generateTreeDiagram(node, isStrataEnabled, mode, depth = 0, prefixes = []) {
             let nodeOutput = applyLayerStyles(node.name, depth, isStrataEnabled, mode);
-            
             if (depth === 0) {
                 let results = [nodeOutput];
                 for (let i = 0; i < node.children.length; i++) {
@@ -291,11 +279,7 @@
 
             try {
                 const structuralTree = parseTextToStructure(inputData);
-                
-                // Dynamically look ahead to check structural depth parameters
                 const maxDepth = determineMaxDepth(structuralTree);
-                
-                // Re-evaluate rows allocation layout live
                 syncCustomizationDeck(maxDepth);
 
                 const diagramLines = generateTreeDiagram(structuralTree, isStrataEnabled, 'html');
@@ -349,6 +333,28 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             const cfg = decodeUrlHash();
+            const inputArea = document.getElementById('treeInput');
+
+            // ⚡ KEY FIX: Intercept the Tab event inside the text editor
+            inputArea.addEventListener('keydown', function(e) {
+                if (e.key === 'Tab') {
+                    e.preventDefault(); // Stop the browser from shifting focus down the page
+                    
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+                    const val = this.value;
+
+                    // Insert two blank spaces where your cursor is sitting
+                    this.value = val.substring(0, start) + "  " + val.substring(end);
+
+                    // Move your cursor selection exactly two spaces forward
+                    this.selectionStart = this.selectionEnd = start + 2;
+                    
+                    // Trigger a real-time redraw of the tree diagram
+                    renderTree();
+                }
+            });
+
             if (cfg) {
                 document.getElementById('treeInput').value = cfg.t || '';
                 document.getElementById('strataToggle').checked = cfg.s === 1;
@@ -357,7 +363,7 @@
             } else {
                 loadSampleData();
             }
-            document.getElementById('treeInput').addEventListener('input', renderTree);
+            inputArea.addEventListener('input', renderTree);
         });
     </script>
 </body>

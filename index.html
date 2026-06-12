@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StrataTree Studio Pro - Custom Hierarchy Generator</title>
+    <title>StrataTree Studio Pro - Adaptive Hierarchy Generator</title>
     <style>
         :root {
             --bg-primary: #121824;
@@ -32,9 +32,17 @@
         .toolbar { display: flex; align-items: center; background-color: var(--bg-tertiary); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border-color); }
         .toggle-container { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; font-weight: 500; }
         
-        /* Customization UI Deck Styling */
-        .custom-deck { background-color: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
-        .deck-row { display: grid; grid-template-columns: 80px 1fr 1fr 1fr 60px; gap: 10px; align-items: center; }
+        /* Customization UI Deck Configuration */
+        .custom-deck { 
+            background-color: var(--bg-tertiary); 
+            border: 1px solid var(--border-color); 
+            border-radius: 8px; 
+            padding: 16px; 
+            display: none; /* Hidden by default, controlled via JavaScript */
+            flex-direction: column; 
+            gap: 14px; 
+        }
+        .deck-row { display: grid; grid-template-columns: 90px 1fr 1fr 1fr 60px; gap: 10px; align-items: center; }
         .deck-header { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: -4px; }
         select, input[type="text"], input[type="color"] { background-color: var(--bg-primary); border: 1px solid var(--border-color); color: white; padding: 6px 10px; border-radius: 6px; font-size: 13px; outline: none; width: 100%; }
         select:focus, input:focus { border-color: var(--accent-blue); }
@@ -50,7 +58,6 @@
         textarea { width: 100%; flex: 1; min-height: 250px; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; color: #ffffff; font-family: monospace; font-size: 13px; line-height: 1.6; resize: none; outline: none; }
         .output-container { position: relative; flex: 1; width: 100%; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; overflow: auto; }
         
-        /* Dynamic Highlight Rules for Web View Renderer */
         pre { font-family: monospace; font-size: 14px; line-height: 1.6; white-space: pre-wrap; color: #ffffff; }
         .hl-node { padding: 2px 6px; border-radius: 4px; display: inline-block; font-weight: inherit; font-style: inherit; }
 
@@ -68,7 +75,7 @@
 
     <header>
         <h1>🌿 StrataTree Studio Pro</h1>
-        <div class="subtitle">An independent tool with deep live UI style customization and link-sharing capabilities.</div>
+        <div class="subtitle">An adaptive standalone hierarchy builder with dynamic custom layout option scaling.</div>
     </header>
 
     <main class="main-layout">
@@ -81,71 +88,14 @@
             <div class="toolbar">
                 <label class="toggle-container">
                     <span class="switch">
-                        <input type="checkbox" id="strataToggle" onchange="renderTree()">
+                        <input type="checkbox" id="strataToggle" onchange="handleToggleView()">
                         <span class="slider"></span>
                     </span>
                     <span>Enable Strata Customizer</span>
                 </label>
             </div>
 
-            <!-- UI CUSTOMIZATION BOARD PANEL -->
-            <div class="custom-deck">
-                <div class="deck-row deck-header">
-                    <span>Layer</span>
-                    <span>Emoji/Icon</span>
-                    <span>Case</span>
-                    <span>Style Modifier</span>
-                    <span>Color</span>
-                </div>
-                <!-- Layer 0 Settings -->
-                <div class="deck-row" data-layer="0">
-                    <span style="font-size:12px; font-weight:bold; color:var(--text-muted)">Root (L0)</span>
-                    <input type="text" id="emoji0" value="👑" oninput="renderTree()">
-                    <select id="case0" onchange="renderTree()">
-                        <option value="upper">UPPERCASE</option>
-                        <option value="none" selected>Normal</option>
-                        <option value="lower">lowercase</option>
-                    </select>
-                    <select id="style0" onchange="renderTree()">
-                        <option value="bold">Bold (** text **)</option>
-                        <option value="highlight">Highlight (` text `)</option>
-                        <option value="none" selected>None</option>
-                    </select>
-                    <input type="color" id="color0" value="#f59e0b" onchange="renderTree()">
-                </div>
-                <!-- Layer 1 Settings -->
-                <div class="deck-row" data-layer="1">
-                    <span style="font-size:12px; font-weight:bold; color:var(--text-muted)">Folder (L1)</span>
-                    <input type="text" id="emoji1" value="📁" oninput="renderTree()">
-                    <select id="case1" onchange="renderTree()">
-                        <option value="upper">UPPERCASE</option>
-                        <option value="none" selected>Normal</option>
-                        <option value="lower">lowercase</option>
-                    </select>
-                    <select id="style1" onchange="renderTree()">
-                        <option value="bold" selected>Bold (** text **)</option>
-                        <option value="highlight">Highlight (` text `)</option>
-                        <option value="none">None</option>
-                    </select>
-                    <input type="color" id="color1" value="#10b981" onchange="renderTree()">
-                </div>
-                <!-- Layer 2 Settings -->
-                <div class="deck-row" data-layer="2">
-                    <span style="font-size:12px; font-weight:bold; color:var(--text-muted)">File (L2)</span>
-                    <input type="text" id="emoji2" value="📄" oninput="renderTree()">
-                    <select id="case2" onchange="renderTree()">
-                        <option value="upper">UPPERCASE</option>
-                        <option value="none">Normal</option>
-                        <option value="lower" selected>lowercase</option>
-                    </select>
-                    <select id="style2" onchange="renderTree()">
-                        <option value="bold">Bold (** text **)</option>
-                        <option value="highlight">Highlight (` text `)</option>
-                        <option value="none" selected>None</option>
-                    </select>
-                    <input type="color" id="color2" value="#3b82f6" onchange="renderTree()">
-                </div>
-            </div>
+            <div class="custom-deck" id="customDeck"></div>
 
             <textarea id="treeInput" placeholder="Type or paste your tree nodes here. Indent using spaces..."></textarea>
         </section>
@@ -173,6 +123,20 @@
         const DIRECTORY_MARKER = '│   ';
         const EMPTY_MARKER = '    ';
 
+        // Local configuration cache to retain choices even when rows hide/appear dynamically
+        let layerStylesCache = {
+            0: { emoji: '👑', case: 'none', style: 'none', color: '#f59e0b' },
+            1: { emoji: '📁', case: 'none', style: 'bold', color: '#10b981' },
+            2: { emoji: '📄', case: 'lower', style: 'none', color: '#3b82f6' }
+        };
+
+        // Fallback default assignments for high-depth layers discovered on the fly
+        const fallbackDefaultStyles = [
+            { emoji: '🔹', case: 'none', style: 'none', color: '#a855f7' },
+            { emoji: '🔸', case: 'none', style: 'none', color: '#ec4899' },
+            { emoji: '▪️', case: 'none', style: 'none', color: '#6b7280' }
+        ];
+
         function parseTextToStructure(text) {
             const rawLines = text.split(/\r?\n/);
             const items = [];
@@ -195,36 +159,99 @@
             return root;
         }
 
-        // Processing pipeline applying the interactive custom UI settings
-        function applyLayerStyles(name, depth, isStrataEnabled, mode) {
-            if (!isStrataEnabled) return name;
-            
-            // Fallback rules if depth outpaces our config inputs
-            const targetDepth = depth > 2 ? 2 : depth;
-            
-            const emoji = document.getElementById(`emoji${targetDepth}`).value;
-            const textCase = document.getElementById(`case${targetDepth}`).value;
-            const modifier = document.getElementById(`style${targetDepth}`).value;
-            const color = document.getElementById(`color${targetDepth}`).value;
+        // Analyzes the current indentation stack to find the deepest layer present
+        function determineMaxDepth(node, currentDepth = 0) {
+            let max = currentDepth;
+            for (let child of node.children) {
+                const childDepth = determineMaxDepth(child, currentDepth + 1);
+                if (childDepth > max) max = childDepth;
+            }
+            return max;
+        }
 
+        // Rebuilds UI configuration controls to match required layer depths exactly
+        function syncCustomizationDeck(maxDepth) {
+            const deck = document.getElementById('customDeck');
+            
+            // Generate standard structural table headers
+            let html = `
+                <div class="deck-row deck-header">
+                    <span>Layer</span>
+                    <span>Emoji/Icon</span>
+                    <span>Case</span>
+                    <span>Style Modifier</span>
+                    <span>Color</span>
+                </div>
+            `;
+
+            for (let i = 0; i <= maxDepth; i++) {
+                // Seed row cache configuration if a completely new level is introduced
+                if (!layerStylesCache[i]) {
+                    const fallback = fallbackDefaultStyles[(i - 3) % fallbackDefaultStyles.length] || fallbackDefaultStyles[0];
+                    layerStylesCache[i] = { ...fallback };
+                }
+
+                const c = layerStylesCache[i];
+                const label = i === 0 ? "Root (L0)" : i === 1 ? "Folder (L1)" : i === 2 ? "File (L2)" : `Level ${i}`;
+
+                html += `
+                    <div class="deck-row" data-layer="${i}">
+                        <span style="font-size:12px; font-weight:bold; color:var(--text-muted)">${label}</span>
+                        <input type="text" id="emoji${i}" value="${c.emoji}" oninput="updateCache(${i}); renderTree();">
+                        <select id="case${i}" onchange="updateCache(${i}); renderTree();">
+                            <option value="upper" ${c.case === 'upper' ? 'selected' : ''}>UPPERCASE</option>
+                            <option value="none" ${c.case === 'none' ? 'selected' : ''}>Normal</option>
+                            <option value="lower" ${c.case === 'lower' ? 'selected' : ''}>lowercase</option>
+                        </select>
+                        <select id="style${i}" onchange="updateCache(${i}); renderTree();">
+                            <option value="bold" ${c.style === 'bold' ? 'selected' : ''}>Bold (** text **)</option>
+                            <option value="highlight" ${c.style === 'highlight' ? 'selected' : ''}>Highlight (\` text \`)</option>
+                            <option value="none" ${c.style === 'none' ? 'selected' : ''}>None</option>
+                        </select>
+                        <input type="color" id="color${i}" value="${c.color}" onchange="updateCache(${i}); renderTree();">
+                    </div>
+                `;
+            }
+
+            deck.innerHTML = html;
+        }
+
+        // Saves current state back to memory cache before rendering cycles clear inputs
+        function updateCache(layer) {
+            if (!document.getElementById(`emoji${layer}`)) return;
+            layerStylesCache[layer] = {
+                emoji: document.getElementById(`emoji${layer}`).value,
+                case: document.getElementById(`case${layer}`).value,
+                style: document.getElementById(`style${layer}`).value,
+                color: document.getElementById(`color${layer}`).value
+            };
+        }
+
+        // Controls control card display parameters based on main toggle switch
+        function handleToggleView() {
+            const isStrataEnabled = document.getElementById('strataToggle').checked;
+            document.getElementById('customDeck').style.display = isStrataEnabled ? 'flex' : 'none';
+            renderTree();
+        }
+
+        function applyLayerStyles(name, depth, isStrataEnabled, mode) {
+            if (!isStrataEnabled || !layerStylesCache[depth]) return name;
+            
+            const c = layerStylesCache[depth];
             let transformedName = name;
-            if (textCase === 'upper') transformedName = transformedName.toUpperCase();
-            if (textCase === 'lower') transformedName = transformedName.toLowerCase();
+            if (c.case === 'upper') transformedName = transformedName.toUpperCase();
+            if (c.case === 'lower') transformedName = transformedName.toLowerCase();
 
             if (mode === 'html') {
-                // Generate colorful web interface DOM layers
-                let inlineStyle = `color: ${color};`;
-                if (modifier === 'bold') inlineStyle += ' font-weight: bold;';
-                if (modifier === 'highlight') inlineStyle += ` background-color: ${color}22; border: 1px solid ${color}; font-family: monospace;`;
-                
-                return `<span class="hl-node" style="${inlineStyle}">${emoji} ${transformedName}</span>`;
+                let inlineStyle = `color: ${c.color};`;
+                if (c.style === 'bold') inlineStyle += ' font-weight: bold;';
+                if (c.style === 'highlight') inlineStyle += ` background-color: ${c.color}22; border: 1px solid ${c.color}; font-family: monospace;`;
+                return `<span class="hl-node" style="${inlineStyle}">${c.emoji} ${transformedName}</span>`;
             } else {
-                // Generate plain text diagram tags for external copy-pasting
                 let prefixSuffix = '';
-                if (modifier === 'bold') prefixSuffix = '**';
-                if (modifier === 'highlight') prefixSuffix = '`';
-                
-                return `${emoji} ${prefixSuffix}${transformedName}${prefixSuffix}`;
+                if (c.style === 'bold') prefixSuffix = '**';
+                if (c.style === 'highlight') prefixSuffix = '`';
+                return `${c.emoji} ${prefixSuffix}${transformedName}${prefixSuffix}`;
             }
         }
 
@@ -264,7 +291,13 @@
 
             try {
                 const structuralTree = parseTextToStructure(inputData);
-                // Render the interactive HTML styled map onto screen canvas
+                
+                // Dynamically look ahead to check structural depth parameters
+                const maxDepth = determineMaxDepth(structuralTree);
+                
+                // Re-evaluate rows allocation layout live
+                syncCustomizationDeck(maxDepth);
+
                 const diagramLines = generateTreeDiagram(structuralTree, isStrataEnabled, 'html');
                 document.getElementById('treeOutput').innerHTML = diagramLines.join('\n');
                 
@@ -274,14 +307,8 @@
             }
         }
 
-        // Encapsulates configuration metrics right inside the sharing hash string
         function updateUrlHash(text, toggleState) {
-            const config = {
-                t: text, s: toggleState ? 1 : 0,
-                e0: document.getElementById('emoji0').value, c0: document.getElementById('case0').value, m0: document.getElementById('style0').value, cl0: document.getElementById('color0').value,
-                e1: document.getElementById('emoji1').value, c1: document.getElementById('case1').value, m1: document.getElementById('style1').value, cl1: document.getElementById('color1').value,
-                e2: document.getElementById('emoji2').value, c2: document.getElementById('case2').value, m2: document.getElementById('style2').value, cl2: document.getElementById('color2').value
-            };
+            const config = { t: text, s: toggleState ? 1 : 0, cache: layerStylesCache };
             const encodedState = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
             window.history.replaceState(null, null, "#" + encodedState);
         }
@@ -303,9 +330,7 @@
             const inputData = document.getElementById('treeInput').value;
             const isStrataEnabled = document.getElementById('strataToggle').checked;
             const structuralTree = parseTextToStructure(inputData);
-            // Run engine using 'text' mode instead of 'html' to output pure markdown symbols
             const diagramLines = generateTreeDiagram(structuralTree, isStrataEnabled, 'text');
-            
             navigator.clipboard.writeText(diagramLines.join('\n')).then(() => showToast("Clean markdown diagram copied!"));
         }
 
@@ -317,9 +342,9 @@
         }
 
         function loadSampleData() {
-            document.getElementById('treeInput').value = "ui-project\n  components\n    Button.tsx\n    Card.tsx\n  assets\n    logo.png\n  index.ts";
+            document.getElementById('treeInput').value = "ui-project\n  components\n    Button.tsx\n    Card.tsx\n  assets\n    sub-assets\n      nested-file.png\n  index.ts";
             document.getElementById('strataToggle').checked = true;
-            renderTree();
+            handleToggleView();
         }
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -327,13 +352,8 @@
             if (cfg) {
                 document.getElementById('treeInput').value = cfg.t || '';
                 document.getElementById('strataToggle').checked = cfg.s === 1;
-                for(let i=0; i<=2; i++) {
-                    if(cfg[`e${i}`] !== undefined) document.getElementById(`emoji${i}`).value = cfg[`e${i}`];
-                    if(cfg[`c${i}`] !== undefined) document.getElementById(`case${i}`).value = cfg[`c${i}`];
-                    if(cfg[`m${i}`] !== undefined) document.getElementById(`style${i}`).value = cfg[`m${i}`];
-                    if(cfg[`cl${i}`] !== undefined) document.getElementById(`color${i}`).value = cfg[`cl${i}`];
-                }
-                renderTree();
+                if (cfg.cache) layerStylesCache = cfg.cache;
+                handleToggleView();
             } else {
                 loadSampleData();
             }

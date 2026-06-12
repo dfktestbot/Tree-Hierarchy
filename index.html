@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StrataTree Studio - Independent Hierarchy Generator</title>
+    <title>StrataTree Studio Pro - Custom Hierarchy Generator</title>
     <style>
         :root {
             --bg-primary: #121824;
@@ -17,248 +17,64 @@
             --border-color: #374151;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-primary); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; padding: 24px; }
+        header { margin-bottom: 24px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; }
+        h1 { font-size: 24px; font-weight: 700; color: #ffffff; display: flex; align-items: center; gap: 10px; }
+        .subtitle { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+        
+        .main-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; flex: 1; }
+        @media (max-width: 1000px) { .main-layout { grid-template-columns: 1fr; } }
+        
+        .panel { background-color: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+        .panel-title { font-size: 16px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; justify-content: space-between; }
+        
+        .toolbar { display: flex; align-items: center; background-color: var(--bg-tertiary); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .toggle-container { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; font-weight: 500; }
+        
+        /* Customization UI Deck Styling */
+        .custom-deck { background-color: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+        .deck-row { display: grid; grid-template-columns: 80px 1fr 1fr 1fr 60px; gap: 10px; align-items: center; }
+        .deck-header { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: -4px; }
+        select, input[type="text"], input[type="color"] { background-color: var(--bg-primary); border: 1px solid var(--border-color); color: white; padding: 6px 10px; border-radius: 6px; font-size: 13px; outline: none; width: 100%; }
+        select:focus, input:focus { border-color: var(--accent-blue); }
+        input[type="color"] { padding: 2px; height: 32px; cursor: pointer; }
 
-        body {
-            background-color: var(--bg-primary);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 24px;
-        }
+        .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #4b5563; transition: .2s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .2s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-green); }
+        input:checked + .slider:before { transform: translateX(18px); }
 
-        header {
-            margin-bottom: 24px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 16px;
-        }
+        textarea { width: 100%; flex: 1; min-height: 250px; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; color: #ffffff; font-family: monospace; font-size: 13px; line-height: 1.6; resize: none; outline: none; }
+        .output-container { position: relative; flex: 1; width: 100%; background-color: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; overflow: auto; }
+        
+        /* Dynamic Highlight Rules for Web View Renderer */
+        pre { font-family: monospace; font-size: 14px; line-height: 1.6; white-space: pre-wrap; color: #ffffff; }
+        .hl-node { padding: 2px 6px; border-radius: 4px; display: inline-block; font-weight: inherit; font-style: inherit; }
 
-        h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: #ffffff;
-            letter-spacing: -0.5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 14px;
-            margin-top: 4px;
-        }
-
-        .main-layout {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 24px;
-            flex: 1;
-        }
-
-        @media (max-width: 900px) {
-            .main-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .panel {
-            background-color: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .panel-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .toolbar {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            background-color: var(--bg-tertiary);
-            padding: 12px 16px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        .toggle-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            user-select: none;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 40px;
-            height: 22px;
-        }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #4b5563;
-            transition: .2s;
-            border-radius: 34px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .2s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: var(--accent-green);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(18px);
-        }
-
-        textarea {
-            width: 100%;
-            flex: 1;
-            min-height: 350px;
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 14px;
-            color: #ffffff;
-            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            resize: none;
-            outline: none;
-        }
-
-        textarea:focus {
-            border-color: var(--accent-blue);
-        }
-
-        .output-container {
-            position: relative;
-            flex: 1;
-            width: 100%;
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 14px;
-            overflow: auto;
-        }
-
-        pre {
-            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-            font-size: 14px;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            color: #ffffff;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        button {
-            background-color: var(--bg-tertiary);
-            color: white;
-            border: 1px solid var(--border-color);
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.15s ease;
-        }
-
-        button:hover {
-            background-color: #2e3f5c;
-            border-color: var(--text-muted);
-        }
-
-        button.btn-primary {
-            background-color: var(--accent-green);
-            border-color: transparent;
-        }
-
-        button.btn-primary:hover {
-            background-color: var(--accent-green-hover);
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background-color: var(--accent-blue);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            font-size: 14px;
-            font-weight: 500;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.2s ease;
-            pointer-events: none;
-            z-index: 1000;
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        .btn-group { display: flex; gap: 10px; }
+        button { background-color: var(--bg-tertiary); color: white; border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease; }
+        button:hover { background-color: #2e3f5c; border-color: var(--text-muted); }
+        button.btn-primary { background-color: var(--accent-green); border-color: transparent; }
+        button.btn-primary:hover { background-color: var(--accent-green-hover); }
+        
+        .toast { position: fixed; bottom: 24px; right: 24px; background-color: var(--accent-blue); color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-size: 14px; font-weight: 500; opacity: 0; transform: translateY(10px); transition: all 0.2s ease; pointer-events: none; z-index: 1000; }
+        .toast.show { opacity: 1; transform: translateY(0); }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🌿 StrataTree Studio</h1>
-        <div class="subtitle">An independent standalone tool for generating and sharing multi-level tree diagrams.</div>
+        <h1>🌿 StrataTree Studio Pro</h1>
+        <div class="subtitle">An independent tool with deep live UI style customization and link-sharing capabilities.</div>
     </header>
 
     <main class="main-layout">
-        <!-- LEFT PANEL: USER INPUT & CONFIGURATION -->
         <section class="panel">
             <div class="panel-title">
-                <span>Input Hierarchy Layout</span>
+                <span>Input Hierarchy & Controls</span>
                 <button onclick="loadSampleData()">Load Sample</button>
             </div>
             
@@ -268,19 +84,77 @@
                         <input type="checkbox" id="strataToggle" onchange="renderTree()">
                         <span class="slider"></span>
                     </span>
-                    <span>Unified Strata Styling</span>
+                    <span>Enable Strata Customizer</span>
                 </label>
             </div>
 
-            <textarea id="treeInput" placeholder="Type or paste your tree nodes here. Indent using spaces or tabs..."></textarea>
+            <!-- UI CUSTOMIZATION BOARD PANEL -->
+            <div class="custom-deck">
+                <div class="deck-row deck-header">
+                    <span>Layer</span>
+                    <span>Emoji/Icon</span>
+                    <span>Case</span>
+                    <span>Style Modifier</span>
+                    <span>Color</span>
+                </div>
+                <!-- Layer 0 Settings -->
+                <div class="deck-row" data-layer="0">
+                    <span style="font-size:12px; font-weight:bold; color:var(--text-muted)">Root (L0)</span>
+                    <input type="text" id="emoji0" value="👑" oninput="renderTree()">
+                    <select id="case0" onchange="renderTree()">
+                        <option value="upper">UPPERCASE</option>
+                        <option value="none" selected>Normal</option>
+                        <option value="lower">lowercase</option>
+                    </select>
+                    <select id="style0" onchange="renderTree()">
+                        <option value="bold">Bold (** text **)</option>
+                        <option value="highlight">Highlight (` text `)</option>
+                        <option value="none" selected>None</option>
+                    </select>
+                    <input type="color" id="color0" value="#f59e0b" onchange="renderTree()">
+                </div>
+                <!-- Layer 1 Settings -->
+                <div class="deck-row" data-layer="1">
+                    <span style="font-size:12px; font-weight:bold; color:var(--text-muted)">Folder (L1)</span>
+                    <input type="text" id="emoji1" value="📁" oninput="renderTree()">
+                    <select id="case1" onchange="renderTree()">
+                        <option value="upper">UPPERCASE</option>
+                        <option value="none" selected>Normal</option>
+                        <option value="lower">lowercase</option>
+                    </select>
+                    <select id="style1" onchange="renderTree()">
+                        <option value="bold" selected>Bold (** text **)</option>
+                        <option value="highlight">Highlight (` text `)</option>
+                        <option value="none">None</option>
+                    </select>
+                    <input type="color" id="color1" value="#10b981" onchange="renderTree()">
+                </div>
+                <!-- Layer 2 Settings -->
+                <div class="deck-row" data-layer="2">
+                    <span style="font-size:12px; font-weight:bold; color:var(--text-muted)">File (L2)</span>
+                    <input type="text" id="emoji2" value="📄" oninput="renderTree()">
+                    <select id="case2" onchange="renderTree()">
+                        <option value="upper">UPPERCASE</option>
+                        <option value="none">Normal</option>
+                        <option value="lower" selected>lowercase</option>
+                    </select>
+                    <select id="style2" onchange="renderTree()">
+                        <option value="bold">Bold (** text **)</option>
+                        <option value="highlight">Highlight (` text `)</option>
+                        <option value="none" selected>None</option>
+                    </select>
+                    <input type="color" id="color2" value="#3b82f6" onchange="renderTree()">
+                </div>
+            </div>
+
+            <textarea id="treeInput" placeholder="Type or paste your tree nodes here. Indent using spaces..."></textarea>
         </section>
 
-        <!-- RIGHT PANEL: INTERACTIVE GRAPHIC RENDERING -->
         <section class="panel">
             <div class="panel-title">
                 <span>ASCII Output Visualizer</span>
                 <div class="btn-group">
-                    <button onclick="shareState()" class="btn-primary">🔗 Share Layout Link</button>
+                    <button onclick="shareState()" class="btn-primary">🔗 Share Custom Link</button>
                     <button onclick="copyToClipboard()">📋 Copy Tree Diagram</button>
                 </div>
             </div>
@@ -291,99 +165,91 @@
         </section>
     </main>
 
-    <div id="toastNotification" class="toast">Link copied to clipboard!</div>
+    <div id="toastNotification" class="toast">Link copied!</div>
 
     <script>
-        // Configuration mapping for multi-strata transformations
-        const strataFormats = {
-            0: (name) => `👑 ${name.toUpperCase()}`,
-            1: (name) => `📁 **${name}**`,
-            2: (name) => `📄 *${name.toLowerCase()}*`
-        };
-
         const CHILD_MARKER = '├── ';
         const LAST_CHILD_MARKER = '└── ';
         const DIRECTORY_MARKER = '│   ';
         const EMPTY_MARKER = '    ';
 
-        // Core dynamic text node structure parser logic
         function parseTextToStructure(text) {
             const rawLines = text.split(/\r?\n/);
             const items = [];
-
             for (let line of rawLines) {
-                if (/^\s*$/.test(line)) continue; // ignore empty rows
-
+                if (/^\s*$/.test(line)) continue;
                 const leadingWhitespace = line.match(/^\s*/)[0];
-                const cleanName = line.trim().replace(/^-\s+/, '');
-                
-                // Using spaces length as an index relative proxy for structural hierarchy depth
                 items.push({
-                    name: cleanName,
+                    name: line.trim().replace(/^-\s+/, ''),
                     indent: leadingWhitespace.length,
-                    children: [],
-                    parent: null
+                    children: []
                 });
             }
-
-            // Establish full tree node object relationships
-            const root = { name: '.', indent: -1, children: [], parent: null };
+            const root = { name: '.', indent: -1, children: [] };
             const pathStack = [root];
-
             for (let item of items) {
-                while (pathStack[pathStack.length - 1].indent >= item.indent) {
-                    pathStack.pop();
-                }
-                const currentParent = pathStack[pathStack.length - 1];
-                currentParent.children.push(item);
-                item.parent = currentParent;
+                while (pathStack[pathStack.length - 1].indent >= item.indent) { pathStack.pop(); }
+                pathStack[pathStack.length - 1].children.push(item);
                 pathStack.push(item);
             }
-
             return root;
         }
 
-        // Draw structural lines recursively
-        function generateTreeDiagram(node, isStrataEnabled, prefixes = []) {
-            if (!node.parent) {
-                // Root node baseline render
-                let rootOutput = isStrataEnabled && strataFormats[0] ? strataFormats[0](node.name) : node.name;
-                let results = [rootOutput];
+        // Processing pipeline applying the interactive custom UI settings
+        function applyLayerStyles(name, depth, isStrataEnabled, mode) {
+            if (!isStrataEnabled) return name;
+            
+            // Fallback rules if depth outpaces our config inputs
+            const targetDepth = depth > 2 ? 2 : depth;
+            
+            const emoji = document.getElementById(`emoji${targetDepth}`).value;
+            const textCase = document.getElementById(`case${targetDepth}`).value;
+            const modifier = document.getElementById(`style${targetDepth}`).value;
+            const color = document.getElementById(`color${targetDepth}`).value;
+
+            let transformedName = name;
+            if (textCase === 'upper') transformedName = transformedName.toUpperCase();
+            if (textCase === 'lower') transformedName = transformedName.toLowerCase();
+
+            if (mode === 'html') {
+                // Generate colorful web interface DOM layers
+                let inlineStyle = `color: ${color};`;
+                if (modifier === 'bold') inlineStyle += ' font-weight: bold;';
+                if (modifier === 'highlight') inlineStyle += ` background-color: ${color}22; border: 1px solid ${color}; font-family: monospace;`;
                 
+                return `<span class="hl-node" style="${inlineStyle}">${emoji} ${transformedName}</span>`;
+            } else {
+                // Generate plain text diagram tags for external copy-pasting
+                let prefixSuffix = '';
+                if (modifier === 'bold') prefixSuffix = '**';
+                if (modifier === 'highlight') prefixSuffix = '`';
+                
+                return `${emoji} ${prefixSuffix}${transformedName}${prefixSuffix}`;
+            }
+        }
+
+        function generateTreeDiagram(node, isStrataEnabled, mode, depth = 0, prefixes = []) {
+            let nodeOutput = applyLayerStyles(node.name, depth, isStrataEnabled, mode);
+            
+            if (depth === 0) {
+                let results = [nodeOutput];
                 for (let i = 0; i < node.children.length; i++) {
-                    results = results.concat(generateTreeDiagram(node.children[i], isStrataEnabled, [i === node.children.length - 1]));
+                    results = results.concat(generateTreeDiagram(node.children[i], isStrataEnabled, mode, depth + 1, [i === node.children.length - 1]));
                 }
                 return results;
             }
 
-            // Compute true structural layer depth by tracing nodes up to original root parent
-            let strataDepth = 0;
-            let tracer = node.parent;
-            while(tracer.parent) {
-                strataDepth++;
-                tracer = tracer.parent;
-            }
-
-            // Assemble matching structural branches prefixing characters
             let linePrefix = '';
             for (let i = 0; i < prefixes.length - 1; i++) {
                 linePrefix += prefixes[i] ? EMPTY_MARKER : DIRECTORY_MARKER;
             }
             linePrefix += prefixes[prefixes.length - 1] ? LAST_CHILD_MARKER : CHILD_MARKER;
 
-            // Run formatting transformer logic if unified flag is turned on
-            let nodeName = node.name;
-            if (isStrataEnabled && strataFormats[strataDepth]) {
-                nodeName = strataFormats[strataDepth](nodeName);
-            }
-
-            let outputLines = [linePrefix + nodeName];
-
+            let outputLines = [linePrefix + nodeOutput];
             for (let i = 0; i < node.children.length; i++) {
-                const nextPrefixes = [...prefixes.slice(0, -1), prefixes[prefixes.length - 1], i === node.children.length - 1];
-                outputLines = outputLines.concat(generateTreeDiagram(node.children[i], isStrataEnabled, nextPrefixes));
+                const nextPrefixes = [...prefixes, i === node.children.length - 1];
+                outputLines = outputLines.concat(generateTreeDiagram(node.children[i], isStrataEnabled, mode, depth + 1, nextPrefixes));
             }
-
             return outputLines;
         }
 
@@ -392,27 +258,31 @@
             const isStrataEnabled = document.getElementById('strataToggle').checked;
             
             if (!inputData.trim()) {
-                document.getElementById('treeOutput').innerText = '.';
+                document.getElementById('treeOutput').innerHTML = '.';
                 return;
             }
 
             try {
                 const structuralTree = parseTextToStructure(inputData);
-                const diagramLines = generateTreeDiagram(structuralTree, isStrataEnabled);
-                document.getElementById('treeOutput').innerText = diagramLines.join('\n');
+                // Render the interactive HTML styled map onto screen canvas
+                const diagramLines = generateTreeDiagram(structuralTree, isStrataEnabled, 'html');
+                document.getElementById('treeOutput').innerHTML = diagramLines.join('\n');
                 
-                // Automatically save transient state directly to location hash dynamically without reload 
                 updateUrlHash(inputData, isStrataEnabled);
             } catch (err) {
-                document.getElementById('treeOutput').innerText = "Parsing matching layout parameters error: " + err.message;
+                document.getElementById('treeOutput').innerText = "Layout rendering error: " + err.message;
             }
         }
 
-        // State compression and expansion tracking algorithms using base64 encryption layer
+        // Encapsulates configuration metrics right inside the sharing hash string
         function updateUrlHash(text, toggleState) {
-            const stateObject = { t: text, s: toggleState ? 1 : 0 };
-            const jsonString = JSON.stringify(stateObject);
-            const encodedState = btoa(unescape(encodeURIComponent(jsonString)));
+            const config = {
+                t: text, s: toggleState ? 1 : 0,
+                e0: document.getElementById('emoji0').value, c0: document.getElementById('case0').value, m0: document.getElementById('style0').value, cl0: document.getElementById('color0').value,
+                e1: document.getElementById('emoji1').value, c1: document.getElementById('case1').value, m1: document.getElementById('style1').value, cl1: document.getElementById('color1').value,
+                e2: document.getElementById('emoji2').value, c2: document.getElementById('case2').value, m2: document.getElementById('style2').value, cl2: document.getElementById('color2').value
+            };
+            const encodedState = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
             window.history.replaceState(null, null, "#" + encodedState);
         }
 
@@ -420,27 +290,23 @@
             try {
                 const hash = window.location.hash.substring(1);
                 if (!hash) return null;
-                const decodedJson = decodeURIComponent(escape(atob(hash)));
-                return JSON.parse(decodedJson);
-            } catch(e) {
-                console.error("Invalid base64 payload decoding parameters:", e);
-                return null;
-            }
+                return JSON.parse(decodeURIComponent(escape(atob(hash))));
+            } catch(e) { return null; }
         }
 
         function shareState() {
-            renderTree(); // Ensure url hash is current
-            const shareUrl = window.location.href;
-            navigator.clipboard.writeText(shareUrl).then(() => {
-                showToast("Shareable configuration link copied!");
-            });
+            renderTree();
+            navigator.clipboard.writeText(window.location.href).then(() => showToast("Custom URL state copied to clipboard!"));
         }
 
         function copyToClipboard() {
-            const outputText = document.getElementById('treeOutput').innerText;
-            navigator.clipboard.writeText(outputText).then(() => {
-                showToast("ASCII diagram template copied!");
-            });
+            const inputData = document.getElementById('treeInput').value;
+            const isStrataEnabled = document.getElementById('strataToggle').checked;
+            const structuralTree = parseTextToStructure(inputData);
+            // Run engine using 'text' mode instead of 'html' to output pure markdown symbols
+            const diagramLines = generateTreeDiagram(structuralTree, isStrataEnabled, 'text');
+            
+            navigator.clipboard.writeText(diagramLines.join('\n')).then(() => showToast("Clean markdown diagram copied!"));
         }
 
         function showToast(message) {
@@ -451,23 +317,26 @@
         }
 
         function loadSampleData() {
-            document.getElementById('treeInput').value = "my-project\n  src\n    index.html\n    main.js\n    styles.css\n  dist\n    index.html\n    bundle.js\n  package.json\n  README.md";
+            document.getElementById('treeInput').value = "ui-project\n  components\n    Button.tsx\n    Card.tsx\n  assets\n    logo.png\n  index.ts";
             document.getElementById('strataToggle').checked = true;
             renderTree();
         }
 
-        // Self initialization logic loop when page mounts on browser
         window.addEventListener('DOMContentLoaded', () => {
-            const sharedState = decodeUrlHash();
-            if (sharedState) {
-                document.getElementById('treeInput').value = sharedState.t || '';
-                document.getElementById('strataToggle').checked = sharedState.s === 1;
+            const cfg = decodeUrlHash();
+            if (cfg) {
+                document.getElementById('treeInput').value = cfg.t || '';
+                document.getElementById('strataToggle').checked = cfg.s === 1;
+                for(let i=0; i<=2; i++) {
+                    if(cfg[`e${i}`] !== undefined) document.getElementById(`emoji${i}`).value = cfg[`e${i}`];
+                    if(cfg[`c${i}`] !== undefined) document.getElementById(`case${i}`).value = cfg[`c${i}`];
+                    if(cfg[`m${i}`] !== undefined) document.getElementById(`style${i}`).value = cfg[`m${i}`];
+                    if(cfg[`cl${i}`] !== undefined) document.getElementById(`color${i}`).value = cfg[`cl${i}`];
+                }
                 renderTree();
             } else {
                 loadSampleData();
             }
-
-            // Enable live real-time editing refresh
             document.getElementById('treeInput').addEventListener('input', renderTree);
         });
     </script>

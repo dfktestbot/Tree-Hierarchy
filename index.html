@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StrataTree Studio Pro - Adaptive Hierarchy Generator</title>
+    <title>StrataTree Studio Pro - Intelligent Hierarchy Generator</title>
     <style>
         :root {
             --bg-primary: #121824;
@@ -74,7 +74,7 @@
 
     <header>
         <h1>🌿 StrataTree Studio Pro</h1>
-        <div class="subtitle">An adaptive standalone hierarchy builder with smooth code-editor tab indents.</div>
+        <div class="subtitle">An adaptive standalone hierarchy builder with smart auto-indentation routing.</div>
     </header>
 
     <main class="main-layout">
@@ -96,7 +96,7 @@
 
             <div class="custom-deck" id="customDeck"></div>
 
-            <textarea id="treeInput" placeholder="Type or paste your tree nodes here. Use Tab to indent layers..."></textarea>
+            <textarea id="treeInput" placeholder="Type or paste your tree nodes here. Indentations track automatically on Enter..."></textarea>
         </section>
 
         <section class="panel">
@@ -139,7 +139,6 @@
             const items = [];
             for (let line of rawLines) {
                 if (/^\s*$/.test(line)) continue;
-                // Treat literal tab characters (\t) as 2 spaces for calculation reliability
                 const normalizedLine = line.replace(/\t/g, '  ');
                 const leadingWhitespace = normalizedLine.match(/^\s*/)[0];
                 items.push({
@@ -307,7 +306,15 @@
 
         function shareState() {
             renderTree();
-            navigator.clipboard.writeText(window.location.href).then(() => showToast("Custom URL state copied to clipboard!"));
+            const longUrl = window.location.href;
+            fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`)
+                .then(response => response.text())
+                .then(shortUrl => {
+                    navigator.clipboard.writeText(shortUrl).then(() => showToast("Shortened layout URL copied!"));
+                })
+                .catch(() => {
+                    navigator.clipboard.writeText(longUrl).then(() => showToast("State URL copied (Long Fallback)!"));
+                });
         }
 
         function copyToClipboard() {
@@ -335,22 +342,43 @@
             const cfg = decodeUrlHash();
             const inputArea = document.getElementById('treeInput');
 
-            // ⚡ KEY FIX: Intercept the Tab event inside the text editor
+            // ⚡ KEY FIX: Advanced Keystroke Trapping for Code Editing
             inputArea.addEventListener('keydown', function(e) {
+                const start = this.selectionStart;
+                const end = this.selectionEnd;
+                const val = this.value;
+
+                // Tab Handler
                 if (e.key === 'Tab') {
-                    e.preventDefault(); // Stop the browser from shifting focus down the page
-                    
-                    const start = this.selectionStart;
-                    const end = this.selectionEnd;
-                    const val = this.value;
-
-                    // Insert two blank spaces where your cursor is sitting
+                    e.preventDefault();
                     this.value = val.substring(0, start) + "  " + val.substring(end);
-
-                    // Move your cursor selection exactly two spaces forward
                     this.selectionStart = this.selectionEnd = start + 2;
+                    renderTree();
+                }
+
+                // Enter Key (Auto-Indentation) Handler
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Intercept default hard line split
+
+                    // Find where the current line starts by looking backward for the nearest line break
+                    const lastNewLineIndex = val.lastIndexOf('\n', start - 1);
+                    const currentLineStart = lastNewLineIndex + 1;
                     
-                    // Trigger a real-time redraw of the tree diagram
+                    // Slice the active line text up to where your cursor is positioned
+                    const currentLineText = val.substring(currentLineStart, start);
+                    
+                    // Match any leading whitespace (spaces or tabs) on the active line
+                    const leadingWhitespaceMatch = currentLineText.match(/^[\s]*/);
+                    const whitespaceToPreserve = leadingWhitespaceMatch ? leadingWhitespaceMatch[0] : '';
+
+                    // Construct the new structural payload: break + matching spacing
+                    const dynamicSpacer = "\n" + whitespaceToPreserve;
+                    
+                    this.value = val.substring(0, start) + dynamicSpacer + val.substring(end);
+                    
+                    // Target your blinking cursor exactly right after the alignment spaces
+                    this.selectionStart = this.selectionEnd = start + dynamicSpacer.length;
+                    
                     renderTree();
                 }
             });

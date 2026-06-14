@@ -31,6 +31,7 @@
         .panel-title { font-size: 16px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; justify-content: space-between; }
         
         .toolbar { display: flex; flex-direction: column; gap: 12px; background-color: var(--bg-tertiary); padding: 16px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .toggle-row { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
         .toggle-container { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; font-weight: 500; }
         
         .saturation-control { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text-main); border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 4px; }
@@ -78,7 +79,7 @@
 
     <header>
         <h1>🌿 StrataTree Studio Pro</h1>
-        <div class="subtitle">An adaptive standalone hierarchy builder with soft pastel mechanics.</div>
+        <div class="subtitle">An adaptive standalone hierarchy builder with independent emoji layout controls.</div>
     </header>
 
     <main class="main-layout">
@@ -89,13 +90,23 @@
             </div>
             
             <div class="toolbar">
-                <label class="toggle-container">
-                    <span class="switch">
-                        <input type="checkbox" id="strataToggle" onchange="handleToggleView()">
-                        <span class="slider"></span>
-                    </span>
-                    <span>Enable Strata Customizer</span>
-                </label>
+                <div class="toggle-row">
+                    <label class="toggle-container">
+                        <span class="switch">
+                            <input type="checkbox" id="strataToggle" onchange="handleToggleView()">
+                            <span class="slider"></span>
+                        </span>
+                        <span>Enable Strata Customizer</span>
+                    </label>
+
+                    <label class="toggle-container" id="emojiToggleWrapper" style="display: none;">
+                        <span class="switch">
+                            <input type="checkbox" id="emojiToggle" onchange="renderTree()">
+                            <span class="slider"></span>
+                        </span>
+                        <span>Show Emojis</span>
+                    </label>
+                </div>
                 
                 <div class="saturation-control" id="saturationWrapper" style="display: none;">
                     <span>Global Color Saturation:</span>
@@ -132,17 +143,16 @@
         const DIRECTORY_MARKER = '│   ';
         const EMPTY_MARKER = '    ';
 
-        // Palette initialized to clean resets and pale/pastel tones unanimously
         let layerStylesCache = {
-            0: { emoji: '👑', case: 'none', style: 'none', color: '#ffb3ba' }, // Soft Pastel Pink
-            1: { emoji: '📁', case: 'none', style: 'none', color: '#baffc9' }, // Soft Pastel Green
-            2: { emoji: '📄', case: 'none', style: 'none', color: '#bae1ff' }  // Soft Pastel Blue
+            0: { emoji: '👑', case: 'none', style: 'none', color: '#ffb3ba' },
+            1: { emoji: '📁', case: 'none', style: 'none', color: '#baffc9' },
+            2: { emoji: '📄', case: 'none', style: 'none', color: '#bae1ff' }
         };
 
         const fallbackDefaultStyles = [
-            { emoji: '🔹', case: 'none', style: 'none', color: '#ffffba' }, // Soft Pastel Yellow
-            { emoji: '🔸', case: 'none', style: 'none', color: '#e8c4ff' }, // Soft Pastel Purple
-            { emoji: '▪️', case: 'none', style: 'none', color: '#ffdfba' }  // Soft Pastel Orange
+            { emoji: '🔹', case: 'none', style: 'none', color: '#ffffba' },
+            { emoji: '🔸', case: 'none', style: 'none', color: '#e8c4ff' },
+            { emoji: '▪️', case: 'none', style: 'none', color: '#ffdfba' }
         ];
 
         let currentGlobalSaturation = 100;
@@ -234,6 +244,7 @@
             const isStrataEnabled = document.getElementById('strataToggle').checked;
             document.getElementById('customDeck').style.display = isStrataEnabled ? 'flex' : 'none';
             document.getElementById('saturationWrapper').style.display = isStrataEnabled ? 'flex' : 'none';
+            document.getElementById('emojiToggleWrapper').style.display = isStrataEnabled ? 'flex' : 'none';
             renderTree();
         }
 
@@ -247,20 +258,24 @@
         function applyLayerStyles(name, depth, isStrataEnabled, mode) {
             if (!isStrataEnabled || !layerStylesCache[depth]) return name;
             const c = layerStylesCache[depth];
+            const showEmojis = document.getElementById('emojiToggle').checked;
+            
             let transformedName = name;
             if (c.case === 'upper') transformedName = transformedName.toUpperCase();
             if (c.case === 'lower') transformedName = transformedName.toLowerCase();
+
+            const emojiPrefix = showEmojis ? `${c.emoji} ` : '';
 
             if (mode === 'html') {
                 let inlineStyle = `color: ${c.color};`;
                 if (c.style === 'bold') inlineStyle += ' font-weight: bold;';
                 if (c.style === 'highlight') inlineStyle += ` background-color: ${c.color}22; border: 1px solid ${c.color}; font-family: monospace;`;
-                return `<span class="hl-node" style="${inlineStyle}">${c.emoji} ${transformedName}</span>`;
+                return `<span class="hl-node" style="${inlineStyle}">${emojiPrefix}${transformedName}</span>`;
             } else {
                 let prefixSuffix = '';
                 if (c.style === 'bold') prefixSuffix = '**';
                 if (c.style === 'highlight') prefixSuffix = '`';
-                return `${c.emoji} ${prefixSuffix}${transformedName}${prefixSuffix}`;
+                return `${emojiPrefix}${prefixSuffix}${transformedName}${prefixSuffix}`;
             }
         }
 
@@ -312,7 +327,14 @@
         }
 
         function updateUrlHash(text, toggleState) {
-            const config = { t: text, s: toggleState ? 1 : 0, cache: layerStylesCache, sat: currentGlobalSaturation };
+            const showEmojis = document.getElementById('emojiToggle').checked ? 1 : 0;
+            const config = { 
+                t: text, 
+                s: toggleState ? 1 : 0, 
+                e: showEmojis,
+                cache: layerStylesCache, 
+                sat: currentGlobalSaturation 
+            };
             const encodedState = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
             window.history.replaceState(null, null, "#" + encodedState);
         }
@@ -362,13 +384,11 @@
             const cfg = decodeUrlHash();
             const inputArea = document.getElementById('treeInput');
 
-            // ⚡ Keystroke Trapping for Code Editing
             inputArea.addEventListener('keydown', function(e) {
                 const start = this.selectionStart;
                 const end = this.selectionEnd;
                 const val = this.value;
 
-                // Tab Handler
                 if (e.key === 'Tab') {
                     e.preventDefault();
                     this.value = val.substring(0, start) + "  " + val.substring(end);
@@ -376,9 +396,7 @@
                     renderTree();
                 }
 
-                // Smart Multi-space Backspace Handler
                 if (e.key === 'Backspace' && start === end) {
-                    // Check if the preceding text matches a full 2-space tab indent
                     if (val.substring(start - 2, start) === "  ") {
                         e.preventDefault();
                         this.value = val.substring(0, start - 2) + val.substring(end);
@@ -387,7 +405,6 @@
                     }
                 }
 
-                // Enter Key (Auto-Indentation) Handler
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     const lastNewLineIndex = val.lastIndexOf('\n', start - 1);
@@ -406,6 +423,7 @@
             if (cfg) {
                 document.getElementById('treeInput').value = cfg.t || '';
                 document.getElementById('strataToggle').checked = cfg.s === 1;
+                document.getElementById('emojiToggle').checked = cfg.e === 1;
                 if (cfg.cache) layerStylesCache = cfg.cache;
                 if (cfg.sat !== undefined) {
                     currentGlobalSaturation = cfg.sat;
@@ -415,8 +433,8 @@
                 }
                 handleToggleView();
             } else {
-                // Keep the toggle off explicitly on fresh load so emojis/colors stay hidden by default
                 document.getElementById('strataToggle').checked = false;
+                document.getElementById('emojiToggle').checked = false;
                 loadSampleData();
             }
             inputArea.addEventListener('input', renderTree);
